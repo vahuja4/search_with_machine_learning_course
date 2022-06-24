@@ -26,6 +26,10 @@ def plots(xgb_model, xgb_model_name, xgb_feat_map, xgb_plot):
 
 # xgb_train_data is a string path to our training file
 def train(xgb_train_data, num_rounds=5, xgb_conf=None ):
+    print("--XGB---")
+    print(type(xgb_train_data), xgb_train_data, dir(xgb_train_data))
+    print("---CONF----")
+    print(xgb_conf)
     xgb_params = {'objective': 'reg:logistic'}
     bst = None
     if xgb_conf is not None:
@@ -34,4 +38,6 @@ def train(xgb_train_data, num_rounds=5, xgb_conf=None ):
     print("Training XG Boost on %s for %s rounds with params: %s" % (xgb_train_data, num_rounds, xgb_params))
     ##### Step 3.a
     print("IMPLEMENT ME: train()")
+    train_data = xgb.DMatrix(xgb_train_data)
+    bst = xgb.train(xgb_params, train_data, num_rounds)
     return bst, xgb_params

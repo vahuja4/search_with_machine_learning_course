@@ -58,7 +58,63 @@ def create_sltr_hand_tuned_query(user_query, query_obj, click_prior_query, ltr_m
 def create_feature_log_query(query, doc_ids, click_prior_query, featureset_name, ltr_store_name, size=200, terms_field="_id"):
     ##### Step 3.b:
     print("IMPLEMENT ME: create_feature_log_query")
-    return None
+    #f_queries = []
+    
+    # Note: we are executing one query per judgment doc id here because it's easier, but we could do this
+    # by adding all the doc ids for this query and scoring them all at once and cut our number of queries down
+    # significantly
+    # Create our SLTR query, filtering so we only retrieve the doc id in question
+    query_obj = {
+        'query': {
+            'bool': {
+                "filter": [  # use a filter so that we don't actually score anything
+                    {
+                        "terms": {
+                            terms_field: [doc_ids]
+                        }
+                    },
+                    {  # use the LTR query bring in the LTR feature set
+                        "sltr": {
+                            "_name": "logged_featureset",
+                            "featureset": featureset_name,
+                            "store": ltr_store_name,
+                            "params": {
+                                "keywords": query
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        # Turn on feature logging so that we get weights back for our features
+        "ext": {
+            "ltr_log": {
+                "log_specs": {
+                    "name": "log_entry",
+                    "named_query": "logged_featureset"
+                }
+            }
+        }
+    }
+    # # Run the query just like any other search
+    # response = client.search(body=query_obj, index=index_name)
+    # print(response)
+    # # For each response, extract out the features and build our training features
+    # # We are going to do this by iterating through the hits, which should be in doc_ids order and put the
+    # # values back onto the Judgment object, which has a place to store these.
+    # if response and len(response['hits']) > 0 and len(response['hits']['hits']) == 1:
+    #     hits = response['hits']['hits']
+    #     # there should only be one hit
+    #     judgment.features = hits[0]['fields']['_ltrlog'][0]['log_entry']
+    #     # 		<grade> qid:<query_id> <feature_number>:<weight>... # <doc_id> <comments>
+    #     # see https://xgboost.readthedocs.io/en/latest/tutorials/input_format.html
+    #     xgb_format = judgment.toXGBFormat() + "\n"
+    #     print(xgb_format)
+    #     train_file.write(bytes(xgb_format, 'utf-8'))
+    # else:
+    #     print("Weirdness. Fix")
+    #f_queries.append(query_obj)
+    return query_obj
 
 
 # Item is a Pandas namedtuple
